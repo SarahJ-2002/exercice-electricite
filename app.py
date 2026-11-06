@@ -5,15 +5,11 @@ import streamlit as st
 
 DOSSIER = Path(__file__).parent / "donnees"
 
+# Configuration de la page
 st.set_page_config(page_title="L'électricité dans 12 quartiers", page_icon="⚡", layout="wide")
 
 st.title("L'électricité dans 12 quartiers")
 st.caption("Relevés mensuels de janvier 2024 à décembre 2025. Données fictives.")
-
-# --- ÉTAPE 1 : Fichier brut (on peut l'enlever pour gagner de la place) ---
-# brut = pd.read_csv(DOSSIER / "consommation_brut.csv")
-# st.write(f"Le fichier brut compte {len(brut)} lignes.")
-# st.dataframe(brut.head(10), hide_index=True)
 
 # --- ÉTAPE 2 : Lecture des données propres ---
 @st.cache_data
@@ -51,5 +47,23 @@ if not communes_choisies:
 # Application des filtres au tableau de données
 df_filtre = df[(df["commune"].isin(communes_choisies)) & (df["annee"] == annee_choisie)]
 
-# Affichage des données filtrées (on remplace le head(10) global par le tableau filtré)
+# --- ÉTAPE 4 : Indicateurs clés ---
+st.subheader(f"Indicateurs clés pour l'année {annee_choisie}")
+
+# Calcul des indicateurs
+total_kwh = df_filtre["kwh"].sum() / 1_000_000 # En millions
+moyenne_abonne = df_filtre["kwh_par_abonne"].mean()
+moyenne_heures = df_filtre["heures_courant"].mean()
+
+# Affichage côte à côte
+col1, col2, col3 = st.columns(3)
+
+col1.metric("Consommation totale", f"{total_kwh:.2f} M kWh")
+col2.metric("Moyenne par abonné", f"{moyenne_abonne:.1f} kWh")
+col3.metric("Heures de courant moy.", f"{moyenne_heures:.1f} h")
+
+st.divider()
+
+# Affichage des données filtrées
+st.subheader("Données filtrées")
 st.dataframe(df_filtre, hide_index=True)
